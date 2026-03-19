@@ -12,7 +12,7 @@ const PORT = 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-mongoose.connect('mongodb://127.0.0.1:27017/smartparking')
+mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log("Connected to MongoDB"))
     .catch(err => console.error("MongoDB connection error:", err));
 
