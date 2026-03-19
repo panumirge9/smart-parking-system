@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log("Connected to MongoDB"))
+    .then(() => console.log("Connected to MongoDB Atlas"))
     .catch(err => console.error("MongoDB connection error:", err));
 
 const slotSchema = new mongoose.Schema({
