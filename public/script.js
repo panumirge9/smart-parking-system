@@ -21,7 +21,7 @@ function toggleTheme() {
     }
 }
 
-// 🔊 AUDIO
+// 🔊 AUDIO ENGINE
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playSound(type) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -31,23 +31,220 @@ function playSound(type) {
     gainNode.connect(audioCtx.destination);
     
     if (type === 'park') {
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime + 0.1); 
-        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime + 0.15);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(150, audioCtx.currentTime); 
+        oscillator.frequency.linearRampToValueAtTime(300, audioCtx.currentTime + 0.8);
+        oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.9); // Brake squeal
+        oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 1.1);
+        
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.4);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime + 0.9); 
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+        
         oscillator.start(audioCtx.currentTime);
-        oscillator.stop(audioCtx.currentTime + 0.3);
+        oscillator.stop(audioCtx.currentTime + 1.2);
     } else if (type === 'leave') {
         oscillator.type = 'triangle';
-        oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.3);
-        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        oscillator.frequency.setValueAtTime(100, audioCtx.currentTime); 
+        oscillator.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 1.0); 
+        
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 0.2);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.0);
+        
         oscillator.start(audioCtx.currentTime);
-        oscillator.stop(audioCtx.currentTime + 0.3);
+        oscillator.stop(audioCtx.currentTime + 1.0);
+    } else if (type === 'lock') {
+        oscillator.type = 'square';
+        oscillator.frequency.setValueAtTime(1800, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime + 0.01);
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime + 0.06); 
+        gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime + 0.12); 
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime + 0.17);
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + 0.2);
     }
+}
+
+// 💨 CONTINUOUS EXHAUST & PARTICLE ENGINE
+function startExhaust(vehicle, duration) {
+    // Spawns a smoke particle every 40ms tracking the car's current position
+    const interval = setInterval(() => {
+        const rect = vehicle.getBoundingClientRect();
+        if (rect.width === 0) return; // Wait until rendered
+        
+        // Calculate tailpipe position (bottom center of the vehicle)
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height; 
+        
+        const smoke = document.createElement('div');
+        smoke.style.position = 'fixed';
+        smoke.style.left = `${x + (Math.random() * 10 - 5)}px`;
+        smoke.style.top = `${y + (Math.random() * 10 - 5)}px`;
+        smoke.style.width = '12px';
+        smoke.style.height = '12px';
+        smoke.style.background = 'rgba(230, 230, 230, 0.7)'; // White/grey silencer dust
+        smoke.style.borderRadius = '50%';
+        smoke.style.pointerEvents = 'none';
+        smoke.style.zIndex = '9997'; // Underneath the car
+        smoke.style.filter = 'blur(3px)';
+        document.body.appendChild(smoke);
+        
+        // Animate the smoke drifting away and fading
+        smoke.animate([
+            { transform: 'translate(-50%, -50%) scale(1)', opacity: 0.7 },
+            { transform: `translate(-50%, -50%) scale(5) translate(${Math.random()*30-15}px, ${Math.random()*15+15}px)`, opacity: 0 }
+        ], { duration: 800 + Math.random()*400, fill: 'forwards' });
+        
+        setTimeout(() => smoke.remove(), 1300);
+    }, 40);
+
+    // Stop smoking after the animation duration finishes
+    setTimeout(() => clearInterval(interval), duration);
+}
+
+function createDualSkidMarks(x, y, angle) {
+    const createMark = (offsetX) => {
+        const mark = document.createElement('div');
+        mark.style.position = 'fixed';
+        mark.style.left = `${x + offsetX}px`;
+        mark.style.top = `${y}px`;
+        mark.style.width = '8px';
+        mark.style.height = '35px';
+        mark.style.background = 'rgba(0,0,0,0.25)';
+        mark.style.borderRadius = '4px';
+        mark.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+        mark.style.pointerEvents = 'none';
+        mark.style.zIndex = '9998';
+        mark.style.transition = 'opacity 2s ease-out';
+        document.body.appendChild(mark);
+        
+        setTimeout(() => { mark.style.opacity = '0'; }, 1000);
+        setTimeout(() => { mark.remove(); }, 3000);
+    };
+    
+    createMark(-15); // Left tire
+    createMark(15);  // Right tire
+}
+
+// 🎬 PARKING ARRIVAL ANIMATION
+function playRealisticParkingAnimation(slotId, vehicleType, onComplete) {
+    const targetSlot = document.getElementById(`slot-${slotId}`);
+    if (!targetSlot) {
+        if (onComplete) onComplete(); 
+        return;
+    }
+    const slotRect = targetSlot.getBoundingClientRect();
+
+    const vehicle = document.createElement('div');
+    vehicle.textContent = vehicleType === 'Bike' ? '🏍️' : '🚗';
+    vehicle.style.position = 'fixed';
+    vehicle.style.left = '0px';
+    vehicle.style.top = '0px';
+    vehicle.style.fontSize = '3.5rem'; 
+    vehicle.style.zIndex = '9999';
+    vehicle.style.pointerEvents = 'none'; 
+    document.body.appendChild(vehicle);
+
+    const startX = window.innerWidth / 2;
+    const startY = window.innerHeight + 150; 
+    const endX = slotRect.left + (slotRect.width / 2);
+    const endY = slotRect.top + (slotRect.height / 2) - 10; 
+
+    const isLeft = endX < startX;
+    const sway = isLeft ? -25 : 25; 
+
+    // TRIGGER EFFECTS
+    startExhaust(vehicle, 1000); // Continuous white exhaust for 1 second while driving
+    setTimeout(() => createDualSkidMarks(endX, endY + 20, 0), 1050); // Drop skid marks
+    setTimeout(() => playSound('lock'), 1700); // Beep-beep!
+
+    const animation = vehicle.animate([
+        { transform: `translate(calc(${startX}px - 50%), calc(${startY}px - 50%)) scale(2.5) rotate(${sway}deg)`, filter: 'drop-shadow(0 40px 20px rgba(0,0,0,0.4)) drop-shadow(0 0 0px rgba(255,0,0,0))', opacity: 0 },
+        { transform: `translate(calc(${startX + sway}px - 50%), calc(${startY - 200}px - 50%)) scale(2) rotate(${sway/2}deg)`, filter: 'drop-shadow(0 30px 15px rgba(0,0,0,0.4)) drop-shadow(0 0 0px rgba(255,0,0,0))', opacity: 1, offset: 0.3 },
+        { transform: `translate(calc(${endX}px - 50%), calc(${endY + 80}px - 50%)) scale(1.2) rotate(0deg)`, filter: 'drop-shadow(0 10px 8px rgba(0,0,0,0.3)) drop-shadow(0 0 0px rgba(255,0,0,0))', offset: 0.75 },
+        { transform: `translate(calc(${endX}px - 50%), calc(${endY - 8}px - 50%)) scale(1.05) rotate(0deg)`, filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.5)) drop-shadow(0 15px 30px rgba(239,68,68,0.9))', offset: 0.90 }, // Brakes!
+        { transform: `translate(calc(${endX}px - 50%), calc(${endY}px - 50%)) scale(1) rotate(0deg)`, filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2)) drop-shadow(0 0 0px rgba(239,68,68,0))', opacity: 1 }
+    ], {
+        duration: 1400, 
+        easing: 'cubic-bezier(0.25, 1, 0.4, 1)', 
+        fill: 'forwards'
+    });
+
+    animation.onfinish = () => {
+        vehicle.remove();
+        if (onComplete) onComplete();
+    };
+}
+
+// 🎬 LEAVING/DEPARTURE ANIMATION
+function playLeavingAnimation(slotId, vehicleType, onComplete) {
+    const targetSlot = document.getElementById(`slot-${slotId}`);
+    if (!targetSlot) {
+        if (onComplete) onComplete();
+        return;
+    }
+    const slotRect = targetSlot.getBoundingClientRect();
+
+    const vehicle = document.createElement('div');
+    vehicle.textContent = vehicleType === 'Bike' ? '🏍️' : '🚗';
+    vehicle.style.position = 'fixed';
+    vehicle.style.left = '0px';
+    vehicle.style.top = '0px';
+    vehicle.style.fontSize = '3.5rem';
+    vehicle.style.zIndex = '9999';
+    vehicle.style.pointerEvents = 'none';
+    document.body.appendChild(vehicle);
+
+    const startX = slotRect.left + (slotRect.width / 2);
+    const startY = slotRect.top + (slotRect.height / 2) - 10;
+    const endX = window.innerWidth / 2;
+    const endY = window.innerHeight + 150;
+    
+    const isLeft = startX < endX;
+    const sway = isLeft ? -20 : 20;
+
+    const gridEmoji = targetSlot.querySelector('.text-4xl');
+    if (gridEmoji) gridEmoji.style.opacity = '0';
+
+    // TRIGGER EFFECTS
+    playSound('lock'); // Unlock beep
+    setTimeout(() => startExhaust(vehicle, 1000), 200); // Start heavy exhaust when hitting the gas
+
+    const animation = vehicle.animate([
+        { // Flash unlock lights
+            transform: `translate(calc(${startX}px - 50%), calc(${startY}px - 50%)) scale(1) rotate(0deg)`, 
+            filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2)) drop-shadow(0 0 20px rgba(255,255,255,0.9))', 
+            opacity: 1 
+        },
+        { // Roll back with reverse lights
+            transform: `translate(calc(${startX}px - 50%), calc(${startY + 30}px - 50%)) scale(1.05) rotate(0deg)`, 
+            filter: 'drop-shadow(0 8px 10px rgba(0,0,0,0.3)) drop-shadow(0 15px 25px rgba(255,255,255,0.8))', 
+            offset: 0.2 
+        },
+        { // Turn wheels and speed off
+            transform: `translate(calc(${startX + sway}px - 50%), calc(${startY + 150}px - 50%)) scale(1.5) rotate(${-sway}deg)`, 
+            filter: 'drop-shadow(0 20px 15px rgba(0,0,0,0.4)) drop-shadow(0 0 0px rgba(255,255,255,0))', 
+            offset: 0.5 
+        },
+        { // Vanish
+            transform: `translate(calc(${endX}px - 50%), calc(${endY}px - 50%)) scale(3) rotate(${-sway/2}deg)`, 
+            filter: 'drop-shadow(0 40px 20px rgba(0,0,0,0.5))', 
+            opacity: 0, 
+            offset: 1 
+        }
+    ], {
+        duration: 1200, 
+        easing: 'cubic-bezier(0.5, 0, 0.2, 1)', 
+        fill: 'forwards'
+    });
+
+    animation.onfinish = () => {
+        vehicle.remove();
+        if (onComplete) onComplete();
+    };
 }
 
 // 🚗 API LOGIC
@@ -107,6 +304,9 @@ function renderGrid(slots) {
     grid.innerHTML = '';
     slots.forEach(slot => {
         const div = document.createElement('div');
+        div.id = `slot-${slot.id}`; 
+        div.dataset.type = slot.vehicleType || 'Car'; 
+        
         let baseClasses = "relative flex flex-col items-center justify-center min-h-[120px] rounded-2xl font-bold transition-all duration-500 ease-out overflow-hidden border-2 ";
         
         if (slot.isOccupied) {
@@ -118,9 +318,7 @@ function renderGrid(slots) {
             
             let content = `
                 <div class="absolute top-2 left-2 text-[10px] uppercase tracking-widest opacity-50">P-${slot.id}</div>
-                
-                <div class="text-4xl mb-1 drop-shadow-md animate-bounce-slow">${icon}</div>
-                
+                <div class="text-4xl mb-1 drop-shadow-md animate-bounce-slow transition-opacity duration-300">${icon}</div>
                 <div class="mt-1 font-mono text-[11px] bg-slate-900/10 dark:bg-white/10 px-2 py-1 rounded-lg border border-white/5 backdrop-blur-sm">
                     ${slot.vehiclePlate}
                 </div>
@@ -135,7 +333,6 @@ function renderGrid(slots) {
             }
             div.innerHTML = content;
         } else {
-
             div.className = baseClasses + "bg-transparent border-dashed border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-600 hover:border-green-500/50 hover:bg-green-500/5";
             div.innerHTML = `
                 <div class="text-xs font-medium tracking-widest opacity-40 mb-1">P-${slot.id}</div>
@@ -167,9 +364,11 @@ async function parkVehicle() {
 
         if (data.success) {
             playSound('park');
-            showMessage(`Success! Parked in slot P-${data.slot.id}`, 'text-green-600 dark:text-green-400');
-            input.value = '';
-            fetchSlots();
+            playRealisticParkingAnimation(data.slot.id, type, () => {
+                showMessage(`Success! Parked in slot P-${data.slot.id}`, 'text-green-600 dark:text-green-400');
+                input.value = '';
+                fetchSlots(); 
+            });
         } else {
             showMessage(data.message, 'text-red-500');
         }
@@ -178,6 +377,9 @@ async function parkVehicle() {
 
 async function freeSlot(slotId) {
     try {
+        const targetSlot = document.getElementById(`slot-${slotId}`);
+        const vehicleType = targetSlot ? targetSlot.dataset.type : 'Car';
+
         const response = await fetch('/api/leave', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -187,12 +389,14 @@ async function freeSlot(slotId) {
 
         if (data.success) {
             playSound('leave');
-            showMessage(`Slot P-${slotId} cleared.`, 'text-green-600 dark:text-green-400');
-            fetchSlots();
+            playLeavingAnimation(slotId, vehicleType, () => {
+                showMessage(`Slot P-${slotId} cleared.`, 'text-green-600 dark:text-green-400');
+                fetchSlots();
 
-            if (data.receipt) {
-                showReceipt(data.receipt);
-            }
+                if (data.receipt) {
+                    showReceipt(data.receipt);
+                }
+            });
         } else {
             showMessage(data.message, 'text-red-500');
         }
@@ -201,7 +405,6 @@ async function freeSlot(slotId) {
 
 // 🧾 RECEIPT LOGIC
 function showReceipt(receipt) {
-
     document.getElementById('recPlate').textContent = receipt.plate;
     document.getElementById('recEntry').textContent = new Date(receipt.entry).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     document.getElementById('recExit').textContent = new Date(receipt.exit).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -246,6 +449,7 @@ function showMessage(msg, colorClass) {
 }
 
 fetchSlots();
+
 // 🧠 AI GREETING LOGIC
 async function fetchGreeting() {
     const welcomeEl = document.getElementById('aiWelcome');
@@ -274,3 +478,4 @@ async function fetchGreeting() {
         welcomeEl.textContent = "Welcome! Find an empty slot and park your vehicle.";
     }
 }
+fetchGreeting();
