@@ -1,8 +1,30 @@
+// 🔒 AUTHENTICATION & MULTI-TENANCY SETUP
+const token = localStorage.getItem('token');
+const CURRENT_GARAGE_ID = localStorage.getItem('garageId');
+
+// If there is no token, kick them back to the login page immediately
+if (!token && !window.location.pathname.includes('login.html')) {
+    window.location.href = 'login.html';
+}
+
+// Reusable headers for secure API requests
+const authHeaders = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+};
+
+// Logout Function
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('garageId');
+    window.location.href = 'login.html';
+}
+
 const grid = document.getElementById('parkingGrid');
 const messageEl = document.getElementById('message');
 const historyBody = document.getElementById('historyBody');
 const isAdminPage = window.location.pathname.includes('admin.html');
-
+let currentSlots = [];
 // 🌗 DARK MODE
 const htmlEl = document.documentElement;
 const themeIcon = document.getElementById('themeIcon');
@@ -34,7 +56,7 @@ function playSound(type) {
         oscillator.type = 'sawtooth';
         oscillator.frequency.setValueAtTime(150, audioCtx.currentTime); 
         oscillator.frequency.linearRampToValueAtTime(300, audioCtx.currentTime + 0.8);
-        oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.9); // Brake squeal
+        oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.9); 
         oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 1.1);
         
         gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
@@ -70,12 +92,10 @@ function playSound(type) {
 
 // 💨 CONTINUOUS EXHAUST & PARTICLE ENGINE
 function startExhaust(vehicle, duration) {
-    // Spawns a smoke particle every 40ms tracking the car's current position
     const interval = setInterval(() => {
         const rect = vehicle.getBoundingClientRect();
-        if (rect.width === 0) return; // Wait until rendered
+        if (rect.width === 0) return; 
         
-        // Calculate tailpipe position (bottom center of the vehicle)
         const x = rect.left + rect.width / 2;
         const y = rect.top + rect.height; 
         
@@ -85,14 +105,13 @@ function startExhaust(vehicle, duration) {
         smoke.style.top = `${y + (Math.random() * 10 - 5)}px`;
         smoke.style.width = '12px';
         smoke.style.height = '12px';
-        smoke.style.background = 'rgba(230, 230, 230, 0.7)'; // White/grey silencer dust
+        smoke.style.background = 'rgba(230, 230, 230, 0.7)'; 
         smoke.style.borderRadius = '50%';
         smoke.style.pointerEvents = 'none';
-        smoke.style.zIndex = '9997'; // Underneath the car
+        smoke.style.zIndex = '9997'; 
         smoke.style.filter = 'blur(3px)';
         document.body.appendChild(smoke);
         
-        // Animate the smoke drifting away and fading
         smoke.animate([
             { transform: 'translate(-50%, -50%) scale(1)', opacity: 0.7 },
             { transform: `translate(-50%, -50%) scale(5) translate(${Math.random()*30-15}px, ${Math.random()*15+15}px)`, opacity: 0 }
@@ -101,7 +120,6 @@ function startExhaust(vehicle, duration) {
         setTimeout(() => smoke.remove(), 1300);
     }, 40);
 
-    // Stop smoking after the animation duration finishes
     setTimeout(() => clearInterval(interval), duration);
 }
 
@@ -124,12 +142,11 @@ function createDualSkidMarks(x, y, angle) {
         setTimeout(() => { mark.style.opacity = '0'; }, 1000);
         setTimeout(() => { mark.remove(); }, 3000);
     };
-    
-    createMark(-15); // Left tire
-    createMark(15);  // Right tire
+    createMark(-15);
+    createMark(15);
 }
 
-// 🎬 PARKING ARRIVAL ANIMATION
+// 🎬 ANIMATIONS
 function playRealisticParkingAnimation(slotId, vehicleType, onComplete) {
     const targetSlot = document.getElementById(`slot-${slotId}`);
     if (!targetSlot) {
@@ -156,22 +173,17 @@ function playRealisticParkingAnimation(slotId, vehicleType, onComplete) {
     const isLeft = endX < startX;
     const sway = isLeft ? -25 : 25; 
 
-    // TRIGGER EFFECTS
-    startExhaust(vehicle, 1000); // Continuous white exhaust for 1 second while driving
-    setTimeout(() => createDualSkidMarks(endX, endY + 20, 0), 1050); // Drop skid marks
-    setTimeout(() => playSound('lock'), 1700); // Beep-beep!
+    startExhaust(vehicle, 1000); 
+    setTimeout(() => createDualSkidMarks(endX, endY + 20, 0), 1050); 
+    setTimeout(() => playSound('lock'), 1700); 
 
     const animation = vehicle.animate([
         { transform: `translate(calc(${startX}px - 50%), calc(${startY}px - 50%)) scale(2.5) rotate(${sway}deg)`, filter: 'drop-shadow(0 40px 20px rgba(0,0,0,0.4)) drop-shadow(0 0 0px rgba(255,0,0,0))', opacity: 0 },
         { transform: `translate(calc(${startX + sway}px - 50%), calc(${startY - 200}px - 50%)) scale(2) rotate(${sway/2}deg)`, filter: 'drop-shadow(0 30px 15px rgba(0,0,0,0.4)) drop-shadow(0 0 0px rgba(255,0,0,0))', opacity: 1, offset: 0.3 },
         { transform: `translate(calc(${endX}px - 50%), calc(${endY + 80}px - 50%)) scale(1.2) rotate(0deg)`, filter: 'drop-shadow(0 10px 8px rgba(0,0,0,0.3)) drop-shadow(0 0 0px rgba(255,0,0,0))', offset: 0.75 },
-        { transform: `translate(calc(${endX}px - 50%), calc(${endY - 8}px - 50%)) scale(1.05) rotate(0deg)`, filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.5)) drop-shadow(0 15px 30px rgba(239,68,68,0.9))', offset: 0.90 }, // Brakes!
+        { transform: `translate(calc(${endX}px - 50%), calc(${endY - 8}px - 50%)) scale(1.05) rotate(0deg)`, filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.5)) drop-shadow(0 15px 30px rgba(239,68,68,0.9))', offset: 0.90 }, 
         { transform: `translate(calc(${endX}px - 50%), calc(${endY}px - 50%)) scale(1) rotate(0deg)`, filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2)) drop-shadow(0 0 0px rgba(239,68,68,0))', opacity: 1 }
-    ], {
-        duration: 1400, 
-        easing: 'cubic-bezier(0.25, 1, 0.4, 1)', 
-        fill: 'forwards'
-    });
+    ], { duration: 1400, easing: 'cubic-bezier(0.25, 1, 0.4, 1)', fill: 'forwards' });
 
     animation.onfinish = () => {
         vehicle.remove();
@@ -179,7 +191,6 @@ function playRealisticParkingAnimation(slotId, vehicleType, onComplete) {
     };
 }
 
-// 🎬 LEAVING/DEPARTURE ANIMATION
 function playLeavingAnimation(slotId, vehicleType, onComplete) {
     const targetSlot = document.getElementById(`slot-${slotId}`);
     if (!targetSlot) {
@@ -209,37 +220,15 @@ function playLeavingAnimation(slotId, vehicleType, onComplete) {
     const gridEmoji = targetSlot.querySelector('.text-4xl');
     if (gridEmoji) gridEmoji.style.opacity = '0';
 
-    // TRIGGER EFFECTS
-    playSound('lock'); // Unlock beep
-    setTimeout(() => startExhaust(vehicle, 1000), 200); // Start heavy exhaust when hitting the gas
+    playSound('lock'); 
+    setTimeout(() => startExhaust(vehicle, 1000), 200); 
 
     const animation = vehicle.animate([
-        { // Flash unlock lights
-            transform: `translate(calc(${startX}px - 50%), calc(${startY}px - 50%)) scale(1) rotate(0deg)`, 
-            filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2)) drop-shadow(0 0 20px rgba(255,255,255,0.9))', 
-            opacity: 1 
-        },
-        { // Roll back with reverse lights
-            transform: `translate(calc(${startX}px - 50%), calc(${startY + 30}px - 50%)) scale(1.05) rotate(0deg)`, 
-            filter: 'drop-shadow(0 8px 10px rgba(0,0,0,0.3)) drop-shadow(0 15px 25px rgba(255,255,255,0.8))', 
-            offset: 0.2 
-        },
-        { // Turn wheels and speed off
-            transform: `translate(calc(${startX + sway}px - 50%), calc(${startY + 150}px - 50%)) scale(1.5) rotate(${-sway}deg)`, 
-            filter: 'drop-shadow(0 20px 15px rgba(0,0,0,0.4)) drop-shadow(0 0 0px rgba(255,255,255,0))', 
-            offset: 0.5 
-        },
-        { // Vanish
-            transform: `translate(calc(${endX}px - 50%), calc(${endY}px - 50%)) scale(3) rotate(${-sway/2}deg)`, 
-            filter: 'drop-shadow(0 40px 20px rgba(0,0,0,0.5))', 
-            opacity: 0, 
-            offset: 1 
-        }
-    ], {
-        duration: 1200, 
-        easing: 'cubic-bezier(0.5, 0, 0.2, 1)', 
-        fill: 'forwards'
-    });
+        { transform: `translate(calc(${startX}px - 50%), calc(${startY}px - 50%)) scale(1) rotate(0deg)`, filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2)) drop-shadow(0 0 20px rgba(255,255,255,0.9))', opacity: 1 },
+        { transform: `translate(calc(${startX}px - 50%), calc(${startY + 30}px - 50%)) scale(1.05) rotate(0deg)`, filter: 'drop-shadow(0 8px 10px rgba(0,0,0,0.3)) drop-shadow(0 15px 25px rgba(255,255,255,0.8))', offset: 0.2 },
+        { transform: `translate(calc(${startX + sway}px - 50%), calc(${startY + 150}px - 50%)) scale(1.5) rotate(${-sway}deg)`, filter: 'drop-shadow(0 20px 15px rgba(0,0,0,0.4)) drop-shadow(0 0 0px rgba(255,255,255,0))', offset: 0.5 },
+        { transform: `translate(calc(${endX}px - 50%), calc(${endY}px - 50%)) scale(3) rotate(${-sway/2}deg)`, filter: 'drop-shadow(0 40px 20px rgba(0,0,0,0.5))', opacity: 0, offset: 1 }
+    ], { duration: 1200, easing: 'cubic-bezier(0.5, 0, 0.2, 1)', fill: 'forwards' });
 
     animation.onfinish = () => {
         vehicle.remove();
@@ -247,31 +236,39 @@ function playLeavingAnimation(slotId, vehicleType, onComplete) {
     };
 }
 
-// 🚗 API LOGIC
 async function fetchSlots() {
+    if (!CURRENT_GARAGE_ID) return;
     try {
-        const response = await fetch('/api/slots');
-        const slots = await response.json();
-        renderGrid(slots);
+        const response = await fetch(`/api/slots?garageId=${CURRENT_GARAGE_ID}`, {
+            headers: authHeaders 
+        });
+        
+        currentSlots = await response.json(); 
+        renderGrid(currentSlots);             
+        
         if (isAdminPage) {
             fetchLogs();
             fetchStats();
         }
-    } catch (error) {}
+    } catch (error) { console.error(error); }
 }
 
 async function fetchStats() {
     try {
-        const response = await fetch('/api/stats');
+        const response = await fetch(`/api/stats?garageId=${CURRENT_GARAGE_ID}`, {
+            headers: authHeaders // <-- Added Auth
+        });
         const stats = await response.json();
         document.getElementById('statOccupancy').textContent = `${stats.occupiedSlots} / ${stats.totalSlots}`;
         document.getElementById('statToday').textContent = stats.carsToday;
-    } catch (error) {}
+    } catch (error) { console.error(error); }
 }
 
 async function fetchLogs() {
     try {
-        const response = await fetch('/api/logs');
+        const response = await fetch(`/api/logs?garageId=${CURRENT_GARAGE_ID}`, {
+            headers: authHeaders // <-- Added Auth
+        });
         const logs = await response.json();
         
         historyBody.innerHTML = '';
@@ -283,13 +280,11 @@ async function fetchLogs() {
                 : '<span class="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 px-3 py-1 rounded-full text-xs font-bold animate-pulse">Parked</span>';
             const typeIcon = log.vehicleType === 'Bike' ? '🏍️ Bike' : '🚗 Car';
             const costText = log.cost > 0 ? `₹${log.cost}` : '---';
-
             const tr = document.createElement('tr');
             tr.className = "hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors log-row";
             tr.innerHTML = `
                 <td class="px-6 py-4 font-bold text-slate-800 dark:text-white plate-cell">${log.vehiclePlate}</td>
                 <td class="px-6 py-4">${typeIcon}</td>
-                <td class="px-6 py-4">P-${log.slotId}</td>
                 <td class="px-6 py-4">${entryTime}</td>
                 <td class="px-6 py-4">${exitTime}</td>
                 <td class="px-6 py-4 font-bold text-green-600 dark:text-green-400">${costText}</td>
@@ -297,14 +292,14 @@ async function fetchLogs() {
             `;
             historyBody.appendChild(tr);
         });
-    } catch (error) {}
+    } catch (error) { console.error(error); }
 }
 
 function renderGrid(slots) {
     grid.innerHTML = '';
     slots.forEach(slot => {
         const div = document.createElement('div');
-        div.id = `slot-${slot.id}`; 
+        div.id = `slot-${slot._id}`; 
         div.dataset.type = slot.vehicleType || 'Car'; 
         
         let baseClasses = "relative flex flex-col items-center justify-center min-h-[120px] rounded-2xl font-bold transition-all duration-500 ease-out overflow-hidden border-2 ";
@@ -317,7 +312,7 @@ function renderGrid(slots) {
             div.className = baseClasses + `bg-${accentColor}-50/10 dark:bg-${accentColor}-900/20 text-${accentColor}-700 dark:text-${accentColor}-300 border-${accentColor}-500/50 shadow-lg scale-100 hover:scale-[1.03]`;
             
             let content = `
-                <div class="absolute top-2 left-2 text-[10px] uppercase tracking-widest opacity-50">P-${slot.id}</div>
+                <div class="absolute top-2 left-2 text-[10px] uppercase tracking-widest opacity-50">${slot.slotNumber}</div>
                 <div class="text-4xl mb-1 drop-shadow-md animate-bounce-slow transition-opacity duration-300">${icon}</div>
                 <div class="mt-1 font-mono text-[11px] bg-slate-900/10 dark:bg-white/10 px-2 py-1 rounded-lg border border-white/5 backdrop-blur-sm">
                     ${slot.vehiclePlate}
@@ -327,7 +322,7 @@ function renderGrid(slots) {
             if (isAdminPage) {
                 content += `
                     <button class="mt-3 w-[80%] py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg text-[10px] font-black uppercase tracking-tighter hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white transition-all shadow-sm active:scale-90 no-print" 
-                            onclick="freeSlot(${slot.id})">
+                            onclick="freeSlot('${slot._id}')">
                         Clear & Bill
                     </button>`;
             }
@@ -335,7 +330,7 @@ function renderGrid(slots) {
         } else {
             div.className = baseClasses + "bg-transparent border-dashed border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-600 hover:border-green-500/50 hover:bg-green-500/5";
             div.innerHTML = `
-                <div class="text-xs font-medium tracking-widest opacity-40 mb-1">P-${slot.id}</div>
+                <div class="text-xs font-medium tracking-widest opacity-40 mb-1">${slot.slotNumber}</div>
                 <div class="text-sm font-black uppercase tracking-widest text-slate-300 dark:text-slate-700">VACANT</div>
                 <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                     <span class="text-xs text-green-500 font-bold">READY TO PARK</span>
@@ -346,35 +341,68 @@ function renderGrid(slots) {
     });
 }
 
+// 🚗 PARK FUNCTION (Updated for E-Ticketing)
 async function parkVehicle() {
     const input = document.getElementById('plateInput');
     const typeInput = document.getElementById('typeInput');
+    const phoneInput = document.getElementById('phoneInput'); 
+
     const plate = input ? input.value.trim() : '';
     const type = typeInput ? typeInput.value : 'Car'; 
+    
+    // Format the phone number (Twilio requires the +91 country code for India)
+    let phone = phoneInput ? phoneInput.value.trim() : ''; 
+    if (phone && !phone.startsWith('+')) {
+        phone = '+91' + phone; 
+    }
 
     if (!plate) return showMessage('Please enter a license plate number.', 'text-red-500');
+
+    // 4. UPDATE THIS LINE TO USE currentSlots
+    const emptySlots = currentSlots.filter(slot => !slot.isOccupied);
+
+    if (emptySlots.length === 0) {
+        // Hide standard message, show the new Overflow button
+        // Hide standard message, show the new Overflow button
+        document.getElementById('message').textContent = "";
+        document.getElementById('fullMessage').classList.remove('hidden');
+        document.getElementById('fullMessage').classList.add('flex');
+        return; // 🛑 Stop the function here so it doesn't call the API!
+    } else {
+        // Ensure the overflow button stays hidden if there is space
+        document.getElementById('fullMessage').classList.add('hidden');
+        document.getElementById('fullMessage').classList.remove('flex');
+    }
+    // ==========================================
 
     try {
         const response = await fetch('/api/park', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ vehiclePlate: plate, vehicleType: type })
+            headers: authHeaders,
+            body: JSON.stringify({ 
+                garageId: CURRENT_GARAGE_ID, 
+                vehiclePlate: plate, 
+                vehicleType: type,
+                phoneNumber: phone
+            })
         });
         const data = await response.json();
 
         if (data.success) {
             playSound('park');
-            playRealisticParkingAnimation(data.slot.id, type, () => {
-                showMessage(`Success! Parked in slot P-${data.slot.id}`, 'text-green-600 dark:text-green-400');
+            playRealisticParkingAnimation(data.slot._id, type, () => {
+                showMessage(`Success! Parked in slot ${data.slot.slotNumber}`, 'text-green-600 dark:text-green-400');
                 input.value = '';
+                if (phoneInput) phoneInput.value = ''; 
                 fetchSlots(); 
             });
         } else {
             showMessage(data.message, 'text-red-500');
         }
-    } catch (error) {}
+    } catch (error) { console.error(error); }
 }
 
+// 🚗 LEAVE FUNCTION (Updated)
 async function freeSlot(slotId) {
     try {
         const targetSlot = document.getElementById(`slot-${slotId}`);
@@ -382,7 +410,7 @@ async function freeSlot(slotId) {
 
         const response = await fetch('/api/leave', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders, // <-- Added Auth
             body: JSON.stringify({ slotId })
         });
         const data = await response.json();
@@ -390,7 +418,7 @@ async function freeSlot(slotId) {
         if (data.success) {
             playSound('leave');
             playLeavingAnimation(slotId, vehicleType, () => {
-                showMessage(`Slot P-${slotId} cleared.`, 'text-green-600 dark:text-green-400');
+                showMessage(`Slot ${data.slot.slotNumber} cleared.`, 'text-green-600 dark:text-green-400');
                 fetchSlots();
 
                 if (data.receipt) {
@@ -400,10 +428,10 @@ async function freeSlot(slotId) {
         } else {
             showMessage(data.message, 'text-red-500');
         }
-    } catch (error) {}
+    } catch (error) { console.error(error); }
 }
 
-// 🧾 RECEIPT LOGIC
+// 🧾 RECEIPT LOGIC (Updated with Dynamic UPI QR)
 function showReceipt(receipt) {
     document.getElementById('recPlate').textContent = receipt.plate;
     document.getElementById('recEntry').textContent = new Date(receipt.entry).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -411,6 +439,28 @@ function showReceipt(receipt) {
     document.getElementById('recDuration').textContent = `${receipt.duration}h`;
     document.getElementById('recRate').textContent = `Rate: ₹${receipt.rate}/hr`;
     document.getElementById('recTotal').textContent = `₹${receipt.total}`;
+
+   // 📱 GENERATE THE DYNAMIC UPI QR CODE
+    const merchantUPI = "panumirge9@okaxis"; // <-- MUST BE A REAL UPI ID
+    const merchantName = "SmartParking";
+    
+    // 1. Encode the name so the space doesn't break the URL
+    const encodedName = encodeURIComponent(merchantName);
+    
+    // 2. Format the amount to two decimal places (e.g., 60.00)
+    const formattedAmount = Number(receipt.total).toFixed(2);
+    
+    // 3. Create the strict UPI URL
+    const upiString = `upi://pay?pa=${merchantUPI}&pn=${encodedName}&am=${formattedAmount}&cu=INR`;
+
+    // Draw the QR Code to the canvas
+    new QRious({
+        element: document.getElementById('upiQRCode'),
+        value: upiString,
+        size: 120,
+        background: 'white',
+        foreground: '#0f172a' 
+    });
 
     const modal = document.getElementById('receiptModal');
     const ticket = modal.querySelector('.relative');
@@ -447,35 +497,34 @@ function showMessage(msg, colorClass) {
     messageEl.className = `h-6 font-bold text-sm mb-4 ${colorClass}`;
     setTimeout(() => { messageEl.textContent = ''; }, 4000);
 }
-
-fetchSlots();
-
-// 🧠 AI GREETING LOGIC
-async function fetchGreeting() {
-    const welcomeEl = document.getElementById('aiWelcome');
-    if (!welcomeEl) return;
+// 🚀 EXPAND OVERFLOW CAPACITY
+async function expandCapacity(amount) {
+    if (!CURRENT_GARAGE_ID) return;
+    
+    const btn = document.getElementById('expandBtn');
+    if(btn) btn.innerHTML = `<span class="animate-pulse">Adding Slots...</span>`;
 
     try {
-        const response = await fetch('/api/greeting');
-        const data = await response.json();
+        const res = await fetch('/api/expand-capacity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ garageId: CURRENT_GARAGE_ID, amount: amount })
+        });
+        const data = await res.json();
         
-        welcomeEl.classList.remove('animate-pulse', 'italic');
-        welcomeEl.textContent = ""; 
-        
-        let i = 0;
-        const message = `"${data.message}"`;
-        function typeWriter() {
-            if (i < message.length) {
-                welcomeEl.textContent += message.charAt(i);
-                i++;
-                setTimeout(typeWriter, 40); 
-            }
+        if (data.success) {
+            // Restore button text
+            if(btn) btn.innerHTML = `<span>+ Add 5 Overflow Slots</span>`;
+            // Magically fetch the new slots and redraw the UI!
+            fetchSlots(); 
+        } else {
+            alert("Failed to expand capacity: " + data.message);
         }
-        typeWriter();
-        
-    } catch (error) {
-        welcomeEl.classList.remove('animate-pulse');
-        welcomeEl.textContent = "Welcome! Find an empty slot and park your vehicle.";
+    } catch (err) {
+        console.error("Error expanding capacity:", err);
+        alert("Server error while adding slots.");
     }
 }
-fetchGreeting();
+
+// Init
+fetchSlots();

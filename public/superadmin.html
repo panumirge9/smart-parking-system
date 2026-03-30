@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panu SaaS - Master Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <style>
+        /* Custom Staggered Entrance Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0; /* Starts hidden */
+        }
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        
+        /* Custom Scrollbar for the table */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-[#0B1120] min-h-screen font-sans text-slate-800 transition-colors duration-500 overflow-x-hidden relative">
+
+    <div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-400/20 dark:bg-indigo-600/20 blur-[120px] pointer-events-none z-0"></div>
+    <div class="fixed bottom-[-10%] right-[-5%] w-[30%] h-[40%] rounded-full bg-purple-400/20 dark:bg-blue-600/20 blur-[120px] pointer-events-none z-0"></div>
+
+    <nav class="sticky top-0 z-50 bg-white/70 dark:bg-[#0B1120]/70 backdrop-blur-xl border-b border-white/20 dark:border-slate-800 px-8 py-4 flex justify-between items-center shadow-sm transition-all">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-indigo-500/30 ring-1 ring-white/20">🚀</div>
+            <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Panu <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-blue-500">SaaS</span></h1>
+        </div> 
+        <div class="flex items-center gap-4">
+            <div class="px-4 py-1.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold border border-green-200 dark:border-green-800 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Systems Online
+            </div>
+            <button onclick="document.documentElement.classList.toggle('dark')" class="p-2.5 bg-white dark:bg-slate-800 rounded-full text-lg shadow-md border border-slate-100 dark:border-slate-700 hover:scale-110 hover:shadow-lg transition-all z-10">🌗</button>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-8 py-10 relative z-10">
+        <div class="mb-10 animate-fade-in-up">
+            <h2 class="text-4xl font-extrabold text-slate-900 dark:text-white mb-2 tracking-tight">Platform Command Center</h2>
+            <p class="text-slate-500 dark:text-slate-400 font-medium">Global analytics and client management for your parking infrastructure.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            
+            <div class="group relative bg-white/60 dark:bg-slate-800/50 backdrop-blur-xl p-6 rounded-3xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/50 dark:shadow-none hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 animate-fade-in-up delay-100 overflow-hidden">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all duration-500"></div>
+                <p class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                    <span class="text-blue-500">🏢</span> Active Garages
+                </p>
+                <h3 id="totGarages" class="text-5xl font-black text-slate-800 dark:text-white tracking-tighter">--</h3>
+            </div>
+
+            <div class="group relative bg-white/60 dark:bg-slate-800/50 backdrop-blur-xl p-6 rounded-3xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/50 dark:shadow-none hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 animate-fade-in-up delay-200 overflow-hidden">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all duration-500"></div>
+                <p class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                    <span class="text-purple-500">🅿️</span> Slots Managed
+                </p>
+                <h3 id="totSlots" class="text-5xl font-black text-slate-800 dark:text-white tracking-tighter">--</h3>
+            </div>
+
+            <div class="group relative bg-white/60 dark:bg-slate-800/50 backdrop-blur-xl p-6 rounded-3xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/50 dark:shadow-none hover:-translate-y-2 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300 animate-fade-in-up delay-300 overflow-hidden">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all duration-500"></div>
+                <p class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                    <span class="text-emerald-500">🚗</span> Vehicles Processed
+                </p>
+                <h3 id="totCars" class="text-5xl font-black text-slate-800 dark:text-white tracking-tighter">--</h3>
+            </div>
+
+            <div class="group relative bg-gradient-to-br from-indigo-600 to-blue-700 p-6 rounded-3xl shadow-2xl shadow-indigo-600/30 hover:-translate-y-2 hover:shadow-indigo-600/40 transition-all duration-300 animate-fade-in-up delay-400 overflow-hidden border border-white/10">
+                <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500"></div>
+                <div class="absolute bottom-0 right-0 opacity-10 text-8xl translate-x-4 translate-y-4">₹</div>
+                <p class="text-[10px] font-extrabold text-indigo-200 uppercase tracking-widest mb-2">Total Platform Revenue</p>
+                <h3 id="totRev" class="text-5xl font-black text-white tracking-tighter drop-shadow-md">₹0</h3>
+            </div>
+        </div>
+
+        <div class="bg-white/60 dark:bg-slate-800/50 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-white/40 dark:border-slate-700/50 overflow-hidden animate-fade-in-up delay-400">
+            <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-700/50 flex justify-between items-center bg-white/40 dark:bg-slate-800/40">
+                <h3 class="text-xl font-black text-slate-900 dark:text-white">Registered Clients</h3>
+                <button onclick="openModal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-indigo-500/30 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0">
+                    + Onboard New Garage
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left whitespace-nowrap">
+                    <thead class="bg-slate-50/50 dark:bg-slate-900/30 text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-[0.2em] font-black">
+                        <tr>
+                            <th class="px-8 py-5">Garage Name</th>
+                            <th class="px-8 py-5">Location</th>
+                            <th class="px-8 py-5">Capacity</th>
+                            <th class="px-8 py-5">Joined Date</th>
+                            <th class="px-8 py-5 text-right">Garage ID (System)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="garageTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50 text-sm text-slate-600 dark:text-slate-300">
+                        <tr><td colspan="5" class="px-8 py-12 text-center animate-pulse font-bold text-indigo-500">Fetching Global SaaS Data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+<div id="onboardModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[100] opacity-0 transition-opacity duration-300">
+        <div id="onboardCard" class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-slate-700 w-full max-w-md p-8 transform scale-95 transition-transform duration-300">
+            
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">New Client</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Provision Database</p>
+                </div>
+                <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center text-2xl">✨</div>
+            </div>
+
+            <form id="onboardForm" onsubmit="submitGarage(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Garage Name</label>
+                    <input type="text" id="gName" required placeholder="e.g. Phoenix Mall Parking" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Location</label>
+                    <input type="text" id="gLoc" required placeholder="e.g. Viman Nagar, Pune" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Slots</label>
+                        <input type="number" id="gSlots" required min="1" placeholder="e.g. 50" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Rate (₹/hr)</label>
+                        <input type="number" id="gRate" required min="0" placeholder="e.g. 60" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow">
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-8 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+                    <button type="button" onclick="closeModal()" class="flex-1 px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Cancel</button>
+                    <button type="submit" id="submitBtn" class="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/30 active:scale-95 flex justify-center items-center gap-2">
+                        <span>Deploy</span> 🚀
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        async function fetchSaaSData() {
+            try {
+                const res = await fetch('/api/saas/platform-stats');
+                const data = await res.json();
+
+                if (data.success) {
+                    // Update KPI Cards
+                    document.getElementById('totGarages').textContent = data.stats.totalGarages;
+                    document.getElementById('totSlots').textContent = data.stats.totalSlots;
+                    document.getElementById('totCars').textContent = data.stats.carsProcessed;
+                    document.getElementById('totRev').textContent = `₹${data.stats.totalRevenue}`;
+
+                // 🔄 Corrected Populate Table Loop
+const tbody = document.getElementById('garageTableBody');
+tbody.innerHTML = '';
+
+data.garages.forEach((garage, index) => {
+    const date = new Date(garage.createdAt).toLocaleDateString('en-IN', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+    });
+    
+    // Add a slight stagger delay to table rows loading in
+    const delay = index * 50; 
+
+    tbody.innerHTML += `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all duration-200 group animate-fade-in-up" style="animation-delay: ${delay}ms;">
+            <td class="px-8 py-5 font-bold text-slate-900 dark:text-white">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg border border-indigo-100 dark:border-indigo-800/50 group-hover:scale-110 transition-transform">🏢</div>
+                    ${garage.name}
+                </div>
+            </td>
+            <td class="px-8 py-5 font-medium text-slate-500">${garage.location}</td>
+            <td class="px-8 py-5">
+                <span class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-black border border-slate-200 dark:border-slate-600">
+                    ${garage.totalSlots} Slots
+                </span>
+            </td>
+            <td class="px-8 py-5 text-slate-400 font-medium">${date}</td>
+            <td class="px-8 py-5 text-right">
+                <div class="flex items-center justify-end gap-4">
+                    <span class="font-mono text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">${garage._id}</span>
+                    <button onclick="deleteGarage('${garage._id}', '${garage.name}')" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+});
+                }
+            } catch (err) {
+                console.error("Failed to load SaaS data:", err);
+                document.getElementById('garageTableBody').innerHTML = `<tr><td colspan="5" class="px-8 py-12 text-center text-red-500 font-bold">Error connecting to database. Please check server.</td></tr>`;
+            }
+        }
+        fetchSaaSData();
+        // --- Modal Animation & Logic ---
+        function openModal() {
+            const modal = document.getElementById('onboardModal');
+            const card = document.getElementById('onboardCard');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                card.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('onboardModal');
+            const card = document.getElementById('onboardCard');
+            modal.classList.add('opacity-0');
+            card.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.getElementById('onboardForm').reset();
+            }, 300);
+        }
+
+        async function submitGarage(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = `<span class="animate-pulse">Deploying...</span> ⚙️`;
+            btn.disabled = true;
+
+            const payload = {
+                name: document.getElementById('gName').value,
+                location: document.getElementById('gLoc').value,
+                totalSlots: parseInt(document.getElementById('gSlots').value),
+                hourlyRate: parseInt(document.getElementById('gRate').value)
+            };
+
+            try {
+                // Call the API route we built earlier
+                const res = await fetch('/api/saas/register-garage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    closeModal();
+                    fetchSaaSData(); // Magically refreshes the UI table!
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch(err) {
+                alert('Server connection failed.');
+            } finally {
+                btn.innerHTML = `<span>Deploy</span> 🚀`;
+                btn.disabled = false;
+            }
+        }
+        async function deleteGarage(id, name) {
+    // A quick confirmation check so you don't delete by accident!
+    if (!confirm(`⚠️ Are you sure you want to offboard "${name}"? \nThis will delete all their slots and data forever.`)) return;
+
+    try {
+        const res = await fetch(`/api/saas/delete-garage/${id}`, {
+            method: 'DELETE'
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            // Trigger the slide-out animation before refreshing (optional but cool)
+            fetchSaaSData(); // Refresh the table and KPI cards
+        } else {
+            alert("Delete failed: " + data.message);
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Could not connect to server to delete.");
+    }
+}
+    </script>
+</body>
+</html>

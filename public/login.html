@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Parking SaaS - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 min-h-screen flex items-center justify-center p-6 font-sans">
+    
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 w-full max-w-md text-center border border-slate-200 dark:border-slate-700">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-full mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+        </div>
+        <h1 class="text-3xl font-extrabold text-slate-700 dark:text-white mb-2">Parking Portal</h1>
+        <p class="text-slate-500 dark:text-slate-400 mb-8 font-medium">Sign in to manage your parking</p>
+        
+        <form id="loginForm" class="space-y-5 text-left">
+            <div>
+                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
+                <input type="email" id="emailInput" required placeholder="admin@citymall.com"
+                    class="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg focus:outline-none focus:border-blue-500 transition-colors">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                <input type="password" id="passwordInput" required placeholder="••••••••"
+                    class="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-lg focus:outline-none focus:border-blue-500 transition-colors">
+            </div>
+            
+            <button type="submit" class="w-full py-3 mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-all active:scale-95">
+                Secure Login
+            </button>
+            <p id="loginMessage" class="text-red-500 text-sm text-center font-bold h-4 mt-2"></p>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const msg = document.getElementById('loginMessage');
+            
+            msg.textContent = "Authenticating...";
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await res.json();
+
+                if (data.success) {
+                    // STORE THE SECURE DATA IN THE BROWSER!
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('garageId', data.user.garageId);
+                    
+                    // Send them to the main parking screen
+                    window.location.href = 'index.html'; 
+                } else {
+                    msg.textContent = data.message;
+                }
+            } catch (err) {
+                msg.textContent = "Server error. Please try again.";
+            }
+        });
+    </script>
+</body>
+</html>
