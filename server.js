@@ -1,7 +1,6 @@
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
-// 1. THIS MUST COME FIRST to load the .env file!
 require('dotenv').config(); 
 
 const bcrypt = require('bcryptjs');
@@ -12,7 +11,7 @@ const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_A
 
 const app = express();
 const PORT = 3000;
-// ... rest of your code
+
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -21,7 +20,7 @@ mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log("Connected to MongoDB Atlas"))
     .catch(err => console.error("MongoDB connection error:", err));
 
-// --- 1. SCHEMAS ---
+
 const garageSchema = new mongoose.Schema({
     name: { type: String, required: true },
     location: { type: String, required: true },
@@ -62,8 +61,6 @@ const Slot = mongoose.model('Slot', slotSchema);
 const Log = mongoose.model('Log', logSchema);
 const User = mongoose.model('User', userSchema);
 
-// --- 2. SECURITY MIDDLEWARE ---
-// This locks down the API so only logged-in users can use it
 const requireAuth = (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ message: 'No token, authorization denied' });
@@ -77,7 +74,6 @@ const requireAuth = (req, res, next) => {
     }
 };
 
-// --- 3. AUTHENTICATION ROUTES ---
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { email, password, role, garageId } = req.body;
@@ -116,7 +112,6 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-// --- 4. SAAS ONBOARDING ROUTE ---
 app.post('/api/saas/register-garage', async (req, res) => {
     try {
         const { name, location, totalSlots, bikeRate, carRate, slotPrefix } = req.body;
@@ -137,11 +132,10 @@ app.post('/api/saas/register-garage', async (req, res) => {
 });
 app.get('/api/saas/platform-stats', async (req, res) => {
     try {
-        // Fetch all garages onboarded to the SaaS
         const garages = await Garage.find().sort({ createdAt: -1 });
         const totalSlots = await Slot.countDocuments();
         
-        // Calculate total platform revenue and volume across ALL garages
+        
         const logs = await Log.find();
         const totalRevenue = logs.reduce((sum, log) => sum + (log.cost || 0), 0);
         const carsProcessed = logs.length;
@@ -155,28 +149,23 @@ app.get('/api/saas/platform-stats', async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 });
-// 🗑️ DELETE GARAGE ROUTE
+
 app.delete('/api/saas/delete-garage/:id', async (req, res) => {
     try {
         const garageId = req.params.id;
         
-        // 1. Delete the garage profile
         await Garage.findByIdAndDelete(garageId);
-        
-        // 2. Delete all slots associated with this garage
+    
         await Slot.deleteMany({ garageId });
         
-        // 3. (Optional) Delete history logs if you want a full wipe
-        // await Log.deleteMany({ garageId });
-
         res.json({ success: true, message: "Garage and slots deleted successfully" });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 });
-// --- 5. SECURE PARKING ROUTES ---
+
 app.get('/api/slots', requireAuth, async (req, res) => {
-    const garageId = req.user.garageId; // Uses the secure ID from the token!
+    const garageId = req.user.garageId;
     const slots = await Slot.find({ garageId }).sort({ slotNumber: 1 });
     res.json(slots);
 });
@@ -211,7 +200,7 @@ app.post('/api/park', requireAuth, async (req, res) => {
             garageId, 
             vehiclePlate, 
             vehicleType, 
-            phoneNumber, // Save to database
+            phoneNumber, 
             slotId: availableSlot._id 
         });
         await newLog.save();
@@ -222,7 +211,6 @@ app.post('/api/park', requireAuth, async (req, res) => {
         availableSlot.activeLogId = newLog._id;
         await availableSlot.save();
 
-        // --- FIRE THE SMS E-TICKET ---
         if (phoneNumber && process.env.TWILIO_PHONE_NUMBER) {
             try {
                 const garage = await Garage.findById(garageId);
@@ -234,7 +222,7 @@ app.post('/api/park', requireAuth, async (req, res) => {
                 console.log(`✅ SMS successfully sent to ${phoneNumber}`);
             } catch (smsError) {
                 console.error("⚠️ Failed to send SMS:", smsError.message);
-                // We don't fail the whole parking request just because a text failed
+                
             }
         }
 
@@ -243,7 +231,7 @@ app.post('/api/park', requireAuth, async (req, res) => {
         res.status(400).json({ success: false, message: 'Parking is completely full!' });
     }
 });
-// ➕ OVERFLOW CAPACITY ROUTE
+
 app.post('/api/expand-capacity', async (req, res) => {
     try {
         const { garageId, amount } = req.body;
@@ -254,7 +242,6 @@ app.post('/api/expand-capacity', async (req, res) => {
         const currentTotal = garage.totalSlots;
         const newTotal = currentTotal + parseInt(amount);
 
-        // Generate the new slots (e.g., A-11, A-12, etc.)
         const newSlots = [];
         for (let i = currentTotal + 1; i <= newTotal; i++) {
             newSlots.push({
@@ -263,11 +250,10 @@ app.post('/api/expand-capacity', async (req, res) => {
                 isOccupied: false
             });
         }
-        
-        // Save them to the database
+
         await Slot.insertMany(newSlots);
         
-        // Update the garage's master capacity
+    
         garage.totalSlots = newTotal;
         await garage.save();
 

@@ -6,8 +6,6 @@ A full-stack, multi-tenant Software-as-a-Service (SaaS) solution designed to mod
 ![Architecture](https://img.shields.io/badge/Architecture-Multi--Tenant-success?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square)
 
----
-
 ## 🚀 Key Features
 
 * **Multi-Tenant Architecture:** Securely onboard multiple independent parking garages. Each garage has fully isolated data, slots, and revenue metrics secured by JWT authentication.

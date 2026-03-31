@@ -8,7 +8,7 @@
     "start": "node server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Panu",
   "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

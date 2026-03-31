@@ -7,21 +7,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <style>
-        /* Custom Staggered Entrance Animations */
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in-up {
             animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            opacity: 0; /* Starts hidden */
+            opacity: 0; 
         }
         .delay-100 { animation-delay: 100ms; }
         .delay-200 { animation-delay: 200ms; }
         .delay-300 { animation-delay: 300ms; }
         .delay-400 { animation-delay: 400ms; }
         
-        /* Custom Scrollbar for the table */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -157,13 +155,12 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    // Update KPI Cards
+                    
                     document.getElementById('totGarages').textContent = data.stats.totalGarages;
                     document.getElementById('totSlots').textContent = data.stats.totalSlots;
                     document.getElementById('totCars').textContent = data.stats.carsProcessed;
                     document.getElementById('totRev').textContent = `₹${data.stats.totalRevenue}`;
 
-                // 🔄 Corrected Populate Table Loop
 const tbody = document.getElementById('garageTableBody');
 tbody.innerHTML = '';
 
@@ -174,7 +171,6 @@ data.garages.forEach((garage, index) => {
         day: 'numeric' 
     });
     
-    // Add a slight stagger delay to table rows loading in
     const delay = index * 50; 
 
     tbody.innerHTML += `
@@ -212,7 +208,6 @@ data.garages.forEach((garage, index) => {
             }
         }
         fetchSaaSData();
-        // --- Modal Animation & Logic ---
         function openModal() {
             const modal = document.getElementById('onboardModal');
             const card = document.getElementById('onboardCard');
@@ -250,7 +245,7 @@ data.garages.forEach((garage, index) => {
             };
 
             try {
-                // Call the API route we built earlier
+            
                 const res = await fetch('/api/saas/register-garage', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -260,7 +255,7 @@ data.garages.forEach((garage, index) => {
                 
                 if(data.success) {
                     closeModal();
-                    fetchSaaSData(); // Magically refreshes the UI table!
+                    fetchSaaSData(); 
                 } else {
                     alert('Error: ' + data.message);
                 }
@@ -272,7 +267,7 @@ data.garages.forEach((garage, index) => {
             }
         }
         async function deleteGarage(id, name) {
-    // A quick confirmation check so you don't delete by accident!
+    
     if (!confirm(`⚠️ Are you sure you want to offboard "${name}"? \nThis will delete all their slots and data forever.`)) return;
 
     try {
@@ -282,8 +277,8 @@ data.garages.forEach((garage, index) => {
         const data = await res.json();
 
         if (data.success) {
-            // Trigger the slide-out animation before refreshing (optional but cool)
-            fetchSaaSData(); // Refresh the table and KPI cards
+            
+            fetchSaaSData(); 
         } else {
             alert("Delete failed: " + data.message);
         }

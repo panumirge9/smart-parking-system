@@ -55,11 +55,11 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    // STORE THE SECURE DATA IN THE BROWSER!
+                    
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('garageId', data.user.garageId);
                     
-                    // Send them to the main parking screen
+                
                     window.location.href = 'index.html'; 
                 } else {
                     msg.textContent = data.message;

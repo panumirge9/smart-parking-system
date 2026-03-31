@@ -1,19 +1,17 @@
-// 🔒 AUTHENTICATION & MULTI-TENANCY SETUP
 const token = localStorage.getItem('token');
 const CURRENT_GARAGE_ID = localStorage.getItem('garageId');
 
-// If there is no token, kick them back to the login page immediately
+
 if (!token && !window.location.pathname.includes('login.html')) {
     window.location.href = 'login.html';
 }
 
-// Reusable headers for secure API requests
+
 const authHeaders = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`
 };
 
-// Logout Function
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('garageId');
@@ -25,7 +23,7 @@ const messageEl = document.getElementById('message');
 const historyBody = document.getElementById('historyBody');
 const isAdminPage = window.location.pathname.includes('admin.html');
 let currentSlots = [];
-// 🌗 DARK MODE
+
 const htmlEl = document.documentElement;
 const themeIcon = document.getElementById('themeIcon');
 if (localStorage.getItem('theme') === 'dark') {
@@ -43,7 +41,6 @@ function toggleTheme() {
     }
 }
 
-// 🔊 AUDIO ENGINE
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playSound(type) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -90,7 +87,6 @@ function playSound(type) {
     }
 }
 
-// 💨 CONTINUOUS EXHAUST & PARTICLE ENGINE
 function startExhaust(vehicle, duration) {
     const interval = setInterval(() => {
         const rect = vehicle.getBoundingClientRect();
@@ -146,7 +142,6 @@ function createDualSkidMarks(x, y, angle) {
     createMark(15);
 }
 
-// 🎬 ANIMATIONS
 function playRealisticParkingAnimation(slotId, vehicleType, onComplete) {
     const targetSlot = document.getElementById(`slot-${slotId}`);
     if (!targetSlot) {
@@ -256,7 +251,7 @@ async function fetchSlots() {
 async function fetchStats() {
     try {
         const response = await fetch(`/api/stats?garageId=${CURRENT_GARAGE_ID}`, {
-            headers: authHeaders // <-- Added Auth
+            headers: authHeaders 
         });
         const stats = await response.json();
         document.getElementById('statOccupancy').textContent = `${stats.occupiedSlots} / ${stats.totalSlots}`;
@@ -267,7 +262,7 @@ async function fetchStats() {
 async function fetchLogs() {
     try {
         const response = await fetch(`/api/logs?garageId=${CURRENT_GARAGE_ID}`, {
-            headers: authHeaders // <-- Added Auth
+            headers: authHeaders 
         });
         const logs = await response.json();
         
@@ -341,7 +336,6 @@ function renderGrid(slots) {
     });
 }
 
-// 🚗 PARK FUNCTION (Updated for E-Ticketing)
 async function parkVehicle() {
     const input = document.getElementById('plateInput');
     const typeInput = document.getElementById('typeInput');
@@ -350,7 +344,6 @@ async function parkVehicle() {
     const plate = input ? input.value.trim() : '';
     const type = typeInput ? typeInput.value : 'Car'; 
     
-    // Format the phone number (Twilio requires the +91 country code for India)
     let phone = phoneInput ? phoneInput.value.trim() : ''; 
     if (phone && !phone.startsWith('+')) {
         phone = '+91' + phone; 
@@ -358,22 +351,21 @@ async function parkVehicle() {
 
     if (!plate) return showMessage('Please enter a license plate number.', 'text-red-500');
 
-    // 4. UPDATE THIS LINE TO USE currentSlots
+
     const emptySlots = currentSlots.filter(slot => !slot.isOccupied);
 
     if (emptySlots.length === 0) {
-        // Hide standard message, show the new Overflow button
-        // Hide standard message, show the new Overflow button
+        
+    
         document.getElementById('message').textContent = "";
         document.getElementById('fullMessage').classList.remove('hidden');
         document.getElementById('fullMessage').classList.add('flex');
-        return; // 🛑 Stop the function here so it doesn't call the API!
+        return; 
     } else {
-        // Ensure the overflow button stays hidden if there is space
+        
         document.getElementById('fullMessage').classList.add('hidden');
         document.getElementById('fullMessage').classList.remove('flex');
     }
-    // ==========================================
 
     try {
         const response = await fetch('/api/park', {
@@ -402,7 +394,6 @@ async function parkVehicle() {
     } catch (error) { console.error(error); }
 }
 
-// 🚗 LEAVE FUNCTION (Updated)
 async function freeSlot(slotId) {
     try {
         const targetSlot = document.getElementById(`slot-${slotId}`);
@@ -410,7 +401,7 @@ async function freeSlot(slotId) {
 
         const response = await fetch('/api/leave', {
             method: 'POST',
-            headers: authHeaders, // <-- Added Auth
+            headers: authHeaders, 
             body: JSON.stringify({ slotId })
         });
         const data = await response.json();
@@ -431,7 +422,6 @@ async function freeSlot(slotId) {
     } catch (error) { console.error(error); }
 }
 
-// 🧾 RECEIPT LOGIC (Updated with Dynamic UPI QR)
 function showReceipt(receipt) {
     document.getElementById('recPlate').textContent = receipt.plate;
     document.getElementById('recEntry').textContent = new Date(receipt.entry).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -440,20 +430,18 @@ function showReceipt(receipt) {
     document.getElementById('recRate').textContent = `Rate: ₹${receipt.rate}/hr`;
     document.getElementById('recTotal').textContent = `₹${receipt.total}`;
 
-   // 📱 GENERATE THE DYNAMIC UPI QR CODE
-    const merchantUPI = "panumirge9@okaxis"; // <-- MUST BE A REAL UPI ID
+
+    const merchantUPI = "panumirge9@okaxis";
     const merchantName = "SmartParking";
     
-    // 1. Encode the name so the space doesn't break the URL
+    
     const encodedName = encodeURIComponent(merchantName);
     
-    // 2. Format the amount to two decimal places (e.g., 60.00)
+
     const formattedAmount = Number(receipt.total).toFixed(2);
-    
-    // 3. Create the strict UPI URL
+
     const upiString = `upi://pay?pa=${merchantUPI}&pn=${encodedName}&am=${formattedAmount}&cu=INR`;
 
-    // Draw the QR Code to the canvas
     new QRious({
         element: document.getElementById('upiQRCode'),
         value: upiString,
@@ -497,7 +485,7 @@ function showMessage(msg, colorClass) {
     messageEl.className = `h-6 font-bold text-sm mb-4 ${colorClass}`;
     setTimeout(() => { messageEl.textContent = ''; }, 4000);
 }
-// 🚀 EXPAND OVERFLOW CAPACITY
+
 async function expandCapacity(amount) {
     if (!CURRENT_GARAGE_ID) return;
     
@@ -513,9 +501,9 @@ async function expandCapacity(amount) {
         const data = await res.json();
         
         if (data.success) {
-            // Restore button text
+            
             if(btn) btn.innerHTML = `<span>+ Add 5 Overflow Slots</span>`;
-            // Magically fetch the new slots and redraw the UI!
+        
             fetchSlots(); 
         } else {
             alert("Failed to expand capacity: " + data.message);
@@ -525,6 +513,4 @@ async function expandCapacity(amount) {
         alert("Server error while adding slots.");
     }
 }
-
-// Init
 fetchSlots();

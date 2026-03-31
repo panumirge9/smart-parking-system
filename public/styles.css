@@ -7,7 +7,7 @@
 }
 
 body {
-    background: radial-gradient(circle at top left, #1e293b, #0f172a); /* Deep navy professional look */
+    background: radial-gradient(circle at top left, #1e293b, #0f172a); 
     color: #f8fafc;
 }
 .bg-white {
